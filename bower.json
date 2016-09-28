@@ -1,0 +1,20 @@
+{
+  "name": "purescript-node-telegram-bot-api",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-console": "^1.0.0",
+    "purescript-functions": "^1.0.0",
+    "purescript-strings": "^1.1.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^1.0.0",
+    "purescript-node-fs-aff": "^2.0.0",
+    "purescript-test-unit": "^9.1.0",
+    "purescript-debug": "^1.0.0"
+  }
+}
