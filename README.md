@@ -15,4 +15,4 @@ To run the tests, provide a `config.json` with this structure:
 
 ## Usage
 
-See the [tests](test/Main.purs) and the [docs](docs/TelegramBot.md)
+See the [tests](test/Main.purs) and the [docs](https://pursuit.purescript.org/packages/purescript-node-telegram-bot-api)
