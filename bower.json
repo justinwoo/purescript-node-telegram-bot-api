@@ -21,5 +21,6 @@
     "purescript-node-fs-aff": "^2.0.0",
     "purescript-test-unit": "^9.1.0",
     "purescript-debug": "^1.0.0"
-  }
+  },
+  "version": "0.1.0"
 }
