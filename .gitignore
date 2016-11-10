@@ -5,6 +5,7 @@
 /.psci*
 /src/.webpack.js
 docs
+.psc-package
 
 # config file with your telegram bot info
 config.json

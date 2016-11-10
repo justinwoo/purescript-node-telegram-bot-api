@@ -1,0 +1,25 @@
+{
+  "name": "purescript-node-telegram-bot-api",
+  "version": "1.0.0",
+  "description": "This is a very small subset of the [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api) API.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justinwoo/purescript-node-telegram-bot-api.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/justinwoo/purescript-node-telegram-bot-api/issues"
+  },
+  "homepage": "https://github.com/justinwoo/purescript-node-telegram-bot-api#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.24.0"
+  }
+}

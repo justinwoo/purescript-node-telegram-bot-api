@@ -5,10 +5,12 @@ import Control.Monad.Aff (Aff, later', launchAff)
 import Control.Monad.Aff.Console (error)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (log)
+import Control.Monad.Except (runExcept)
 import Data.Either (fromRight, Either(Right, Left))
-import Data.Foreign (parseJSON, ForeignError)
+import Data.Foreign (parseJSON, F)
 import Data.Foreign.Class (readProp)
 import Data.String.Regex (regex)
+import Data.String.Regex.Flags (RegexFlags(RegexFlags))
 import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Aff (readTextFile)
@@ -22,7 +24,7 @@ type Config =
   , master :: Int
   }
 
-parseConfig :: String -> Either ForeignError Config
+parseConfig :: String -> F Config
 parseConfig json = do
   value <- parseJSON json
   token <- readProp "token" value
@@ -32,13 +34,13 @@ parseConfig json = do
     , master: master
     }
 
-getConfig :: forall e. Aff (fs :: FS | e) (Either ForeignError Config)
+getConfig :: forall e. Aff (fs :: FS | e) (F Config)
 getConfig = parseConfig <$> readTextFile UTF8 "./config.json"
 
 main = launchAff $ do
-  config <- getConfig
+  config <- runExcept <$> getConfig
   case config of
-    Left e -> error "config file is malformed."
+    Left e -> error $ "config file is malformed: " <> show e
     Right x -> do
       void $ liftEff $ runTests x
 
@@ -46,7 +48,7 @@ runTests {token, master} = runTest do
   suite "TelegramBot" do
     test "Can receive messages and send them" do
       bot <- liftEff $ connect token
-      let flags = { unicode: true, sticky: false, multiline: false, ignoreCase: true, global: false }
+      let flags = RegexFlags { unicode: true, sticky: false, multiline: false, ignoreCase: true, global: false }
       let pattern = unsafePartial $ fromRight $ regex "^get$" flags
       liftEff $ addMessagesListener bot pattern \m xs -> do
         log "#####Queued up 'get' Message received#####"

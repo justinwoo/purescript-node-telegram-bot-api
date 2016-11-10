@@ -12,15 +12,14 @@
     "url": "git://github.com/justinwoo/purescript-node-telegram-bot-api.git"
   },
   "dependencies": {
-    "purescript-console": "^1.0.0",
-    "purescript-functions": "^1.0.0",
-    "purescript-strings": "^1.1.0"
+    "purescript-eff": "^2.0.0",
+    "purescript-aff": "^2.0.1",
+    "purescript-strings": "^2.0.2",
+    "purescript-foreign": "^3.0.0",
+    "purescript-node-fs-aff": "^3.0.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "^1.0.0",
-    "purescript-node-fs-aff": "^2.0.0",
-    "purescript-test-unit": "^9.1.0",
-    "purescript-debug": "^1.0.0"
+    "purescript-test-unit": "^10.0.1"
   },
   "version": "0.1.0"
 }
