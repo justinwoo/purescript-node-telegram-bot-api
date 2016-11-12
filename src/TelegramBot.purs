@@ -2,6 +2,9 @@ module TelegramBot where
 
 import Prelude
 import Control.Monad.Eff (Eff)
+import Data.Foreign (Foreign, F)
+import Data.Foreign.Class (class IsForeign, read, readProp)
+import Data.Foreign.Null (unNull)
 import Data.Function.Uncurried (runFn2, Fn2, Fn3, runFn3)
 import Data.Maybe (Maybe)
 import Data.String.Regex (Regex)
@@ -17,24 +20,52 @@ type Options =
   }
 
 --| The Telegram Message type. See https://core.telegram.org/bots/api#message
-type Message =
+newtype Message = Message
   { message_id :: Int
-  , from :: User
+  , from :: Maybe User
   , date :: Int
   , chat :: Chat
   }
 
 --| The Telegram User type. See https://core.telegram.org/bots/api#user
-type User =
+newtype User = User
   { id :: Int
   , first_name :: String
   }
 
 --| The Telegram Chat type. See https://core.telegram.org/bots/api#chat
-type Chat =
+newtype Chat = Chat
   { id :: Int
   , type :: String
   }
+
+--| The Regex execution matches. See https://github.com/yagop/node-telegram-bot-api#TelegramBot+onText
+newtype Matches = Matches (Maybe (Array String))
+
+instance isForeignMessage :: IsForeign Message where
+  read json = do
+    message_id <- readProp "message_id" json
+    from <- unNull <$> readProp "from" json
+    date <- readProp "date" json
+    chat <- readProp "chat" json
+    pure $ Message {message_id, from, date, chat}
+
+instance isForeignUser :: IsForeign User where
+  read json = do
+    id <- readProp "id" json
+    first_name <- readProp "first_name" json
+    pure $ User {id, first_name}
+
+instance isForeignChat :: IsForeign Chat where
+  read json = do
+    id <- readProp "id" json
+    t <- readProp "type" json
+    pure $ Chat {id, type: t}
+
+instance isForeignMatches :: IsForeign Matches where
+  read json = do
+    maybeXs <- unNull <$> read json
+    pure $ Matches maybeXs
 
 foreign import data TELEGRAM :: !
 foreign import data Bot :: *
@@ -72,12 +103,16 @@ foreign import _addMessagesListener :: forall e.
   Fn3
     Bot
     Regex
-    (Message -> Maybe (Array String) -> Eff (TelegramEffects e) Unit)
+    (Foreign -> Foreign -> Eff (TelegramEffects e) Unit)
     (Eff (TelegramEffects e) Unit)
 addMessagesListener :: forall e.
   Bot ->
   Regex ->
-  (Message -> Maybe (Array String) -> Eff (TelegramEffects e) Unit) ->
+  (F Message -> F Matches -> Eff (TelegramEffects e) Unit) ->
   (Eff (TelegramEffects e) Unit)
-addMessagesListener = runFn3 _addMessagesListener
+addMessagesListener bot regex handler = do
+  runFn3 _addMessagesListener bot regex handleMessage
+  where
+    handleMessage foriegnMsg foreignMatches =
+      handler (read foriegnMsg) (read foreignMatches)
 
