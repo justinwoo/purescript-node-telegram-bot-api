@@ -4,7 +4,7 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Data.Foreign (Foreign, F)
 import Data.Foreign.Class (class IsForeign, read, readProp)
-import Data.Foreign.Null (unNull)
+import Data.Foreign.NullOrUndefined (unNullOrUndefined)
 import Data.Function.Uncurried (runFn2, Fn2, Fn3, runFn3)
 import Data.Maybe (Maybe)
 import Data.String.Regex (Regex)
@@ -25,6 +25,7 @@ newtype Message = Message
   , from :: Maybe User
   , date :: Int
   , chat :: Chat
+  , location :: Maybe Location
   }
 
 --| The Telegram User type. See https://core.telegram.org/bots/api#user
@@ -39,16 +40,23 @@ newtype Chat = Chat
   , type :: String
   }
 
+--| The Telegram Location type. See https://core.telegram.org/bots/api#location
+newtype Location = Location
+  { longitude :: Number
+  , latitude :: Number
+  }
+
 --| The Regex execution matches. See https://github.com/yagop/node-telegram-bot-api#TelegramBot+onText
 newtype Matches = Matches (Maybe (Array String))
 
 instance isForeignMessage :: IsForeign Message where
   read json = do
     message_id <- readProp "message_id" json
-    from <- unNull <$> readProp "from" json
+    from <- unNullOrUndefined <$> readProp "from" json
     date <- readProp "date" json
     chat <- readProp "chat" json
-    pure $ Message {message_id, from, date, chat}
+    location <- unNullOrUndefined <$> readProp "location" json
+    pure $ Message {message_id, from, date, chat, location}
 
 instance isForeignUser :: IsForeign User where
   read json = do
@@ -62,9 +70,15 @@ instance isForeignChat :: IsForeign Chat where
     t <- readProp "type" json
     pure $ Chat {id, type: t}
 
+instance isForeignLocation :: IsForeign Location where
+  read json = do
+    latitude <- readProp "latitude" json
+    longitude <- readProp "longitude" json
+    pure $ Location {latitude, longitude}
+
 instance isForeignMatches :: IsForeign Matches where
   read json = do
-    maybeXs <- unNull <$> read json
+    maybeXs <- unNullOrUndefined <$> read json
     pure $ Matches maybeXs
 
 foreign import data TELEGRAM :: !
