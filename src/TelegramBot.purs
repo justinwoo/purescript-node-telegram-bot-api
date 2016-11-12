@@ -99,20 +99,36 @@ sendMessage :: forall e.
 sendMessage bot id message = do
   runFn3 _sendMessage bot id message
 
-foreign import _addMessagesListener :: forall e.
+foreign import _onText :: forall e.
   Fn3
     Bot
     Regex
     (Foreign -> Foreign -> Eff (TelegramEffects e) Unit)
     (Eff (TelegramEffects e) Unit)
-addMessagesListener :: forall e.
+--| For adding a callback for on text matching a regex pattern.
+onText :: forall e.
   Bot ->
   Regex ->
   (F Message -> F Matches -> Eff (TelegramEffects e) Unit) ->
   (Eff (TelegramEffects e) Unit)
-addMessagesListener bot regex handler = do
-  runFn3 _addMessagesListener bot regex handleMessage
+onText bot regex handler = do
+  runFn3 _onText bot regex handleMessage
   where
-    handleMessage foriegnMsg foreignMatches =
-      handler (read foriegnMsg) (read foreignMatches)
+    handleMessage foreignMsg foreignMatches =
+      handler (read foreignMsg) (read foreignMatches)
 
+foreign import _onMessage :: forall e.
+  Fn2
+    Bot
+    (Foreign -> Eff (TelegramEffects e) Unit)
+    (Eff (TelegramEffects e) Unit)
+--| For adding a callback for all messages.
+onMessage :: forall e.
+  Bot ->
+  (F Message -> Eff (TelegramEffects e) Unit) ->
+  (Eff (TelegramEffects e) Unit)
+onMessage bot handler = do
+  runFn2 _onMessage bot handleMessage
+  where
+    handleMessage foreignMsg =
+      handler (read foreignMsg)

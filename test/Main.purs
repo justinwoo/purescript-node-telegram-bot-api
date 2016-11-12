@@ -1,11 +1,14 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Aff (Aff, later', launchAff)
-import Control.Monad.Aff.Console (error)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Console as EffC
+import Control.Monad.Aff (Canceler, Aff, later', launchAff)
+import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff.Console (error)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Console (CONSOLE, log)
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Except (runExcept)
 import Data.Either (fromRight, Either(Right, Left))
 import Data.Foreign (parseJSON, F)
@@ -17,8 +20,9 @@ import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Aff (readTextFile)
 import Partial.Unsafe (unsafePartial)
-import TelegramBot (Token, sendMessage, addMessagesListener, connect)
+import TelegramBot (onMessage, TELEGRAM, Token, sendMessage, onText, connect)
 import Test.Unit (test, suite)
+import Test.Unit.Console (TESTOUTPUT)
 import Test.Unit.Main (exit, runTest)
 
 type Config =
@@ -39,6 +43,25 @@ parseConfig json = do
 getConfig :: forall e. Aff (fs :: FS | e) (F Config)
 getConfig = parseConfig <$> readTextFile UTF8 "./config.json"
 
+main :: forall e.
+  Eff
+    ( err :: EXCEPTION
+    , fs :: FS
+    , console :: CONSOLE
+    , testOutput :: TESTOUTPUT
+    , avar :: AVAR
+    , telegram :: TELEGRAM
+    | e
+    )
+    (Canceler
+       ( fs :: FS
+       , console :: CONSOLE
+       , testOutput :: TESTOUTPUT
+       , avar :: AVAR
+       , telegram :: TELEGRAM
+       | e
+       )
+    )
 main = launchAff $ do
   config <- runExcept <$> getConfig
   case config of
@@ -46,13 +69,24 @@ main = launchAff $ do
     Right x -> do
       void $ liftEff $ runTests x
 
+runTests :: forall e.
+  Config
+  -> Eff
+       ( console :: CONSOLE
+       , testOutput :: TESTOUTPUT
+       , avar :: AVAR
+       , telegram :: TELEGRAM
+       | e
+       )
+       Unit
 runTests {token, master} = runTest do
   suite "TelegramBot" do
     test "Can receive messages and send them" do
       bot <- liftEff $ connect token
       let flags = RegexFlags { unicode: true, sticky: false, multiline: false, ignoreCase: true, global: false }
       let pattern = unsafePartial $ fromRight $ regex "^get$" flags
-      liftEff $ addMessagesListener bot pattern handleQueuedMessage
+      liftEff $ onText bot pattern handleQueuedMessage
+      liftEff $ onMessage bot handleQueuedMessage'
       liftEff $ sendMessage bot master "HELLO FROM PURESCRIPT"
       later' 1000 $ liftEff $ exit 0
   where
@@ -68,3 +102,12 @@ runTests {token, master} = runTest do
           EffC.error ":("
         _ -> do
           EffC.error "something happened with decoding"
+    handleQueuedMessage' fM = do
+      log "#####Queued up Message received#####"
+      case runExcept fM of
+        Right m -> do
+          log "message and matches decoded correctly"
+        Left e1 -> do
+          log "failed decoding:"
+          log $ show e1
+          EffC.error ":("

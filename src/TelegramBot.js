@@ -12,7 +12,15 @@ exports._sendMessage = function(bot, id, message) {
   };
 };
 
-exports._addMessagesListener = function (bot, regex, eff) {
+exports._onMessage = function(bot, eff) {
+  return function () {
+    bot.on('message', function (msg) {
+      eff(msg)();
+    });
+  };
+};
+
+exports._onText = function (bot, regex, eff) {
   return function () {
     bot.onText(regex, function (msg, match) {
       eff(msg)(match)();
