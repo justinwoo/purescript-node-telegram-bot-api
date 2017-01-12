@@ -13,13 +13,13 @@
   },
   "dependencies": {
     "purescript-eff": "^2.0.0",
-    "purescript-aff": "^2.0.1",
-    "purescript-strings": "^2.0.2",
-    "purescript-foreign": "^3.0.0",
+    "purescript-aff": "^2.0.2",
+    "purescript-strings": "^2.1.0",
+    "purescript-foreign": "^3.0.1",
     "purescript-node-fs-aff": "^3.0.0"
   },
   "devDependencies": {
-    "purescript-test-unit": "^10.0.1"
+    "purescript-test-unit": "^10.1.0"
   },
   "version": "0.1.0"
 }
