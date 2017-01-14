@@ -16,7 +16,9 @@
     "purescript-aff": "^2.0.2",
     "purescript-strings": "^2.1.0",
     "purescript-foreign": "^3.0.1",
-    "purescript-node-fs-aff": "^3.0.0"
+    "purescript-node-fs-aff": "^3.0.0",
+    "purescript-foreign-generic": "^3.0.0",
+    "purescript-generics-rep": "^4.1.0"
   },
   "devDependencies": {
     "purescript-test-unit": "^10.1.0"

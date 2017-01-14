@@ -1,12 +1,14 @@
 module TelegramBot where
 
 import Prelude
+import Data.Foreign.Generic as DFG
 import Control.Monad.Eff (Eff)
 import Data.Foreign (Foreign, F)
-import Data.Foreign.Class (class IsForeign, read, readProp)
-import Data.Foreign.NullOrUndefined (unNullOrUndefined)
+import Data.Foreign.Class (class IsForeign, read)
+import Data.Foreign.Generic (readGeneric)
+import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.Function.Uncurried (runFn2, Fn2, Fn3, runFn3)
-import Data.Maybe (Maybe)
+import Data.Generic.Rep (class Generic)
 import Data.String.Regex (Regex)
 
 type TelegramEffects e = (telegram :: TELEGRAM | e)
@@ -22,22 +24,28 @@ type Options =
 --| The Telegram Message type. See https://core.telegram.org/bots/api#message
 newtype Message = Message
   { message_id :: Int
-  , from :: Maybe User
+  , from :: NullOrUndefined User
   , date :: Int
   , chat :: Chat
-  , location :: Maybe Location
+  , location :: NullOrUndefined Location
+  , text :: String
   }
 
 --| The Telegram User type. See https://core.telegram.org/bots/api#user
 newtype User = User
   { id :: Int
-  , first_name :: String
+  , first_name :: NullOrUndefined String
+  , last_name :: NullOrUndefined String
+  , username :: NullOrUndefined String
   }
 
 --| The Telegram Chat type. See https://core.telegram.org/bots/api#chat
 newtype Chat = Chat
   { id :: Int
   , type :: String
+  , first_name :: NullOrUndefined String
+  , last_name :: NullOrUndefined String
+  , username :: NullOrUndefined String
   }
 
 --| The Telegram Location type. See https://core.telegram.org/bots/api#location
@@ -47,39 +55,27 @@ newtype Location = Location
   }
 
 --| The Regex execution matches. See https://github.com/yagop/node-telegram-bot-api#TelegramBot+onText
-newtype Matches = Matches (Maybe (Array String))
+newtype Matches = Matches (NullOrUndefined (Array String))
 
+derive instance genericMessage :: Generic Message _
 instance isForeignMessage :: IsForeign Message where
-  read json = do
-    message_id <- readProp "message_id" json
-    from <- unNullOrUndefined <$> readProp "from" json
-    date <- readProp "date" json
-    chat <- readProp "chat" json
-    location <- unNullOrUndefined <$> readProp "location" json
-    pure $ Message {message_id, from, date, chat, location}
+  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
+derive instance genericUser :: Generic User _
 instance isForeignUser :: IsForeign User where
-  read json = do
-    id <- readProp "id" json
-    first_name <- readProp "first_name" json
-    pure $ User {id, first_name}
+  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
+derive instance genericChat :: Generic Chat _
 instance isForeignChat :: IsForeign Chat where
-  read json = do
-    id <- readProp "id" json
-    t <- readProp "type" json
-    pure $ Chat {id, type: t}
+  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
+derive instance genericLocation :: Generic Location _
 instance isForeignLocation :: IsForeign Location where
-  read json = do
-    latitude <- readProp "latitude" json
-    longitude <- readProp "longitude" json
-    pure $ Location {latitude, longitude}
+  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
+derive instance genericMatches :: Generic Matches _
 instance isForeignMatches :: IsForeign Matches where
-  read json = do
-    maybeXs <- unNullOrUndefined <$> read json
-    pure $ Matches maybeXs
+  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 foreign import data TELEGRAM :: !
 foreign import data Bot :: *
