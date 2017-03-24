@@ -2,13 +2,17 @@ module TelegramBot where
 
 import Prelude
 import Data.Foreign.Generic as DFG
+import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
+import Control.Promise (Promise, toAff)
 import Data.Foreign (Foreign, F)
 import Data.Foreign.Class (class IsForeign, read)
 import Data.Foreign.Generic (readGeneric)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
-import Data.Function.Uncurried (runFn2, Fn2, Fn3, runFn3)
+import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
 import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
 import Data.String.Regex (Regex)
 
 type TelegramEffects e = (telegram :: TELEGRAM | e)
@@ -58,22 +62,32 @@ newtype Location = Location
 newtype Matches = Matches (NullOrUndefined (Array String))
 
 derive instance genericMessage :: Generic Message _
+instance showMessage :: Show Message where
+  show = genericShow
 instance isForeignMessage :: IsForeign Message where
   read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericUser :: Generic User _
+instance showUser :: Show User where
+  show = genericShow
 instance isForeignUser :: IsForeign User where
   read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericChat :: Generic Chat _
+instance showChat :: Show Chat where
+  show = genericShow
 instance isForeignChat :: IsForeign Chat where
   read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericLocation :: Generic Location _
+instance showLocation :: Show Location where
+  show = genericShow
 instance isForeignLocation :: IsForeign Location where
   read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericMatches :: Generic Matches _
+instance showMatches :: Show Matches where
+  show = genericShow
 instance isForeignMatches :: IsForeign Matches where
   read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
@@ -142,3 +156,15 @@ onMessage bot handler = do
   where
     handleMessage foreignMsg =
       handler (read foreignMsg)
+
+foreign import _getMe :: forall e.
+  Fn1
+    Bot
+    (Eff (TelegramEffects e) (Promise Foreign))
+--| For adding a callback for all messages.
+getMe :: forall e.
+  Bot ->
+  (Aff (TelegramEffects e) (F User))
+getMe bot = do
+  p <- liftEff $ runFn1 _getMe bot
+  read <$> toAff p

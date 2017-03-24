@@ -27,3 +27,9 @@ exports._onText = function (bot, regex, eff) {
     });
   };
 };
+
+exports._getMe = function (bot) {
+  return function () {
+    return bot.getMe();
+  };
+};
