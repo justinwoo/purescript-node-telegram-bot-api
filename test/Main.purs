@@ -94,7 +94,6 @@ runTests {token, master} = runTest do
       me <- runExcept <$> getMe bot
       assert "Bot GetMe worked" $ isRight me
       liftEff $ do
-        logShow me
         onText bot pattern handleQueuedMessage
         onMessage bot handleQueuedMessage'
         sendMessage bot master "HELLO FROM PURESCRIPT"
