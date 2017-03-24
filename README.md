@@ -1,4 +1,4 @@
-# purescript-node-telegram-bot-api
+# purescript-node-telegram-bot-api [![Build Status](https://travis-ci.org/justinwoo/purescript-node-telegram-bot-api.svg?branch=master)](https://travis-ci.org/justinwoo/purescript-node-telegram-bot-api)
 
 This is a very small subset of the [node-telegram-bot-api](https://github.com/yagop/node-telegram-bot-api) API.
 
