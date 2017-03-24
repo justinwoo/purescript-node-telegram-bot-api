@@ -4,13 +4,12 @@ This is a very small subset of the [node-telegram-bot-api](https://github.com/ya
 
 ## Development
 
-To run the tests, provide a `config.json` with this structure:
+To run the tests, provide environment variables like so:
 
-```js
-{
-  "token": "XXXXXXXXXXXXXXXXXXXXXX", // The telegram bot API token
-  "master": XXXXXXXXX // Your user ID number
-}
+```bash
+export TEST_TELEGRAM_BOT_TOKEN='your telegram bot api token here'
+export TEST_TELEGRAM_MASTER='your telegram id here for the bot to
+message and get messages from!'
 ```
 
 ## Usage
