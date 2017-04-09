@@ -2,7 +2,7 @@ module Test.Main where
 
 import Prelude
 import Control.Monad.Eff.Console as EffC
-import Control.Monad.Aff (Canceler, later', launchAff)
+import Control.Monad.Aff (Canceler, delay, launchAff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Console (error)
 import Control.Monad.Eff (Eff)
@@ -11,9 +11,10 @@ import Control.Monad.Eff.Console (CONSOLE, log, logShow)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either(..), fromRight, isRight)
-import Data.Int (round)
+import Data.Int (round, toNumber)
 import Data.List.NonEmpty (NonEmptyList)
 import Data.Maybe (Maybe(Just, Nothing))
+import Data.Newtype (wrap)
 import Data.String.Regex (regex)
 import Data.String.Regex.Flags (RegexFlags(RegexFlags))
 import Data.Tuple.Nested ((/\))
@@ -48,7 +49,7 @@ getConfig = do
 
 main :: forall e.
   Eff
-    ( err :: EXCEPTION
+    ( exception :: EXCEPTION
     , console :: CONSOLE
     , testOutput :: TESTOUTPUT
     , avar :: AVAR
@@ -71,7 +72,8 @@ main = launchAff $ do
     (\e -> error $ "config file is malformed: " <> show e)
     (\x -> do
       void <<< liftEff $ runTests x
-      later' 1000 $ liftEff $ exit 0
+      delay <<< wrap $ toNumber 1000
+      liftEff $ exit 0
     )
     config
 

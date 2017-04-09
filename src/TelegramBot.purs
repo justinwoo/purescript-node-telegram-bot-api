@@ -3,12 +3,12 @@ module TelegramBot where
 import Prelude
 import Data.Foreign.Generic as DFG
 import Control.Monad.Aff (Aff)
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, kind Effect)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Promise (Promise, toAff)
 import Data.Foreign (Foreign, F)
-import Data.Foreign.Class (class IsForeign, read)
-import Data.Foreign.Generic (readGeneric)
+import Data.Foreign.Class (class Decode, decode)
+import Data.Foreign.Generic (genericDecode)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
 import Data.Generic.Rep (class Generic)
@@ -32,7 +32,7 @@ newtype Message = Message
   , date :: Int
   , chat :: Chat
   , location :: NullOrUndefined Location
-  , text :: String
+  , text :: NullOrUndefined String
   }
 
 --| The Telegram User type. See https://core.telegram.org/bots/api#user
@@ -64,35 +64,35 @@ newtype Matches = Matches (NullOrUndefined (Array String))
 derive instance genericMessage :: Generic Message _
 instance showMessage :: Show Message where
   show = genericShow
-instance isForeignMessage :: IsForeign Message where
-  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
+instance decodeMessage :: Decode Message where
+  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericUser :: Generic User _
 instance showUser :: Show User where
   show = genericShow
-instance isForeignUser :: IsForeign User where
-  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
+instance decodeUser :: Decode User where
+  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericChat :: Generic Chat _
 instance showChat :: Show Chat where
   show = genericShow
-instance isForeignChat :: IsForeign Chat where
-  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
+instance decodeChat :: Decode Chat where
+  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericLocation :: Generic Location _
 instance showLocation :: Show Location where
   show = genericShow
-instance isForeignLocation :: IsForeign Location where
-  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
+instance decodeLocation :: Decode Location where
+  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
 derive instance genericMatches :: Generic Matches _
 instance showMatches :: Show Matches where
   show = genericShow
-instance isForeignMatches :: IsForeign Matches where
-  read = readGeneric $ DFG.defaultOptions {unwrapSingleConstructors = true}
+instance decodeMatches :: Decode Matches where
+  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
 
-foreign import data TELEGRAM :: !
-foreign import data Bot :: *
+foreign import data TELEGRAM :: Effect
+foreign import data Bot :: Type
 
 defaultOptions :: Options
 defaultOptions =
@@ -139,7 +139,7 @@ onText bot regex handler = do
   runFn3 _onText bot regex handleMessage
   where
     handleMessage foreignMsg foreignMatches =
-      handler (read foreignMsg) (read foreignMatches)
+      handler (decode foreignMsg) (decode foreignMatches)
 
 foreign import _onMessage :: forall e.
   Fn2
@@ -155,7 +155,7 @@ onMessage bot handler = do
   runFn2 _onMessage bot handleMessage
   where
     handleMessage foreignMsg =
-      handler (read foreignMsg)
+      handler (decode foreignMsg)
 
 foreign import _getMe :: forall e.
   Fn1
@@ -167,4 +167,4 @@ getMe :: forall e.
   (Aff (TelegramEffects e) (F User))
 getMe bot = do
   p <- liftEff $ runFn1 _getMe bot
-  read <$> toAff p
+  decode <$> toAff p
