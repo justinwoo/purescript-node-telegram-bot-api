@@ -19,12 +19,12 @@
     "purescript-node-fs-aff": "^4.0.0",
     "purescript-generics-rep": "^5.0.0",
     "purescript-aff-promise": "^0.7.0",
-    "purescript-foreign-generic": "^4.1.0"
+    "purescript-foreign-generic": "^5.0.0"
   },
   "devDependencies": {
-    "purescript-validation": "^3.0.0",
-    "purescript-node-process": "^4.0.0",
-    "purescript-test-unit": "^11.0.0"
+    "purescript-validation": "^3.1.0",
+    "purescript-node-process": "^5.0.0",
+    "purescript-test-unit": "^12.0.0"
   },
   "version": "0.1.0"
 }
