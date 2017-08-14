@@ -1,19 +1,16 @@
 module TelegramBot where
 
 import Prelude
-import Data.Foreign.Generic as DFG
+
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, kind Effect)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Promise (Promise, toAff)
 import Data.Foreign (Foreign, F)
-import Data.Foreign.Class (class Decode, decode)
-import Data.Foreign.Generic (genericDecode)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
-import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
 import Data.String.Regex (Regex)
+import Simple.JSON (read)
 
 type TelegramEffects e = (telegram :: TELEGRAM | e)
 
@@ -26,7 +23,7 @@ type Options =
   }
 
 --| The Telegram Message type. See https://core.telegram.org/bots/api#message
-newtype Message = Message
+type Message =
   { message_id :: Int
   , from :: NullOrUndefined User
   , date :: Int
@@ -36,7 +33,7 @@ newtype Message = Message
   }
 
 --| The Telegram User type. See https://core.telegram.org/bots/api#user
-newtype User = User
+type User =
   { id :: Int
   , first_name :: NullOrUndefined String
   , last_name :: NullOrUndefined String
@@ -44,7 +41,7 @@ newtype User = User
   }
 
 --| The Telegram Chat type. See https://core.telegram.org/bots/api#chat
-newtype Chat = Chat
+type Chat =
   { id :: Int
   , type :: String
   , first_name :: NullOrUndefined String
@@ -53,43 +50,13 @@ newtype Chat = Chat
   }
 
 --| The Telegram Location type. See https://core.telegram.org/bots/api#location
-newtype Location = Location
+type Location =
   { longitude :: Number
   , latitude :: Number
   }
 
 --| The Regex execution matches. See https://github.com/yagop/node-telegram-bot-api#TelegramBot+onText
-newtype Matches = Matches (NullOrUndefined (Array String))
-
-derive instance genericMessage :: Generic Message _
-instance showMessage :: Show Message where
-  show = genericShow
-instance decodeMessage :: Decode Message where
-  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
-
-derive instance genericUser :: Generic User _
-instance showUser :: Show User where
-  show = genericShow
-instance decodeUser :: Decode User where
-  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
-
-derive instance genericChat :: Generic Chat _
-instance showChat :: Show Chat where
-  show = genericShow
-instance decodeChat :: Decode Chat where
-  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
-
-derive instance genericLocation :: Generic Location _
-instance showLocation :: Show Location where
-  show = genericShow
-instance decodeLocation :: Decode Location where
-  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
-
-derive instance genericMatches :: Generic Matches _
-instance showMatches :: Show Matches where
-  show = genericShow
-instance decodeMatches :: Decode Matches where
-  decode = genericDecode $ DFG.defaultOptions {unwrapSingleConstructors = true}
+type Matches = NullOrUndefined (Array String)
 
 foreign import data TELEGRAM :: Effect
 foreign import data Bot :: Type
@@ -136,26 +103,41 @@ onText :: forall e.
   (F Message -> F Matches -> Eff (TelegramEffects e) Unit) ->
   (Eff (TelegramEffects e) Unit)
 onText bot regex handler = do
-  runFn3 _onText bot regex handleMessage
+  onText' bot regex handleMessage
   where
     handleMessage foreignMsg foreignMatches =
-      handler (decode foreignMsg) (decode foreignMatches)
+      handler (read foreignMsg) (read foreignMatches)
 
+--| For getting the Foreign values directly. The callback is Message -> Matches -> Eff _ Unit.
+onText' :: forall e.
+  Bot ->
+  Regex ->
+  (Foreign -> Foreign -> Eff (TelegramEffects e) Unit) ->
+  (Eff (TelegramEffects e) Unit)
+onText' bot regex handler = do
+  runFn3 _onText bot regex handler
+  
 foreign import _onMessage :: forall e.
   Fn2
     Bot
     (Foreign -> Eff (TelegramEffects e) Unit)
     (Eff (TelegramEffects e) Unit)
+
 --| For adding a callback for all messages.
 onMessage :: forall e.
   Bot ->
   (F Message -> Eff (TelegramEffects e) Unit) ->
   (Eff (TelegramEffects e) Unit)
 onMessage bot handler = do
-  runFn2 _onMessage bot handleMessage
-  where
-    handleMessage foreignMsg =
-      handler (decode foreignMsg)
+  onMessage' bot $ handler <<< read
+
+--| For getting the Foreign value directly from onMessage
+onMessage' :: forall e.
+  Bot ->
+  (Foreign -> Eff (TelegramEffects e) Unit) ->
+  (Eff (TelegramEffects e) Unit)
+onMessage' bot handler = do
+  runFn2 _onMessage bot handler
 
 foreign import _getMe :: forall e.
   Fn1
@@ -167,4 +149,4 @@ getMe :: forall e.
   (Aff (TelegramEffects e) (F User))
 getMe bot = do
   p <- liftEff $ runFn1 _getMe bot
-  decode <$> toAff p
+  read <$> toAff p
