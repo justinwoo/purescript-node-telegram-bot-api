@@ -33,3 +33,13 @@ exports._getMe = function (bot) {
     return bot.getMe();
   };
 };
+
+exports.runPromise = function (err) {
+  return function (succ) {
+    return function (promise) {
+      return function () {
+        promise.then(succ).catch(err);
+      };
+    };
+  };
+};

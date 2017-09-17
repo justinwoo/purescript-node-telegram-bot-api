@@ -2,13 +2,16 @@ module TelegramBot where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Eff (Eff, kind Effect)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Promise (Promise, toAff)
+import Control.Monad.Eff.Exception (Error)
+import Control.Monad.Eff.Uncurried (EffFn1, mkEffFn1)
+import Data.Either (Either(..))
 import Data.Foreign (Foreign, F)
 import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
+import Data.Monoid (mempty)
 import Data.String.Regex (Regex)
 import Simple.JSON (read)
 
@@ -116,7 +119,7 @@ onText' :: forall e.
   (Eff (TelegramEffects e) Unit)
 onText' bot regex handler = do
   runFn3 _onText bot regex handler
-  
+
 foreign import _onMessage :: forall e.
   Fn2
     Bot
@@ -139,6 +142,13 @@ onMessage' :: forall e.
 onMessage' bot handler = do
   runFn2 _onMessage bot handler
 
+foreign import data Promise :: Type -> Type
+foreign import runPromise :: forall e a
+   . (EffFn1 e Error Unit)
+  -> (EffFn1 e a Unit)
+  -> Promise a
+  -> Eff e Unit
+
 foreign import _getMe :: forall e.
   Fn1
     Bot
@@ -149,4 +159,9 @@ getMe :: forall e.
   (Aff (TelegramEffects e) (F User))
 getMe bot = do
   p <- liftEff $ runFn1 _getMe bot
-  read <$> toAff p
+  read <$> makeAff
+    (\cb -> pure mempty <* runPromise
+      (mkEffFn1 $ cb <<< Left)
+      (mkEffFn1 $ cb <<< Right)
+      p
+    )
