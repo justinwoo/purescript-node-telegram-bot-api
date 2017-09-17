@@ -1,13 +1,14 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Eff.Console as EffC
-import Control.Monad.Aff (Canceler, delay, launchAff)
+
+import Control.Monad.Aff (delay, launchAff_)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Console (error)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE, log, logShow)
+import Control.Monad.Eff.Console as EffC
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either(..), fromRight, isRight)
@@ -57,16 +58,8 @@ main :: forall e.
     , process :: PROCESS
     | e
     )
-    (Canceler
-       ( console :: CONSOLE
-       , testOutput :: TESTOUTPUT
-       , avar :: AVAR
-       , telegram :: TELEGRAM
-       , process :: PROCESS
-       | e
-       )
-    )
-main = launchAff $ do
+    Unit
+main = launchAff_ $ do
   config <- liftEff $ getConfig
   unV
     (\e -> error $ "config file is malformed: " <> show e)
