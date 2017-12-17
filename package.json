@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/justinwoo/purescript-node-telegram-bot-api#readme",
   "dependencies": {
-    "node-telegram-bot-api": "^0.27.0"
+    "node-telegram-bot-api": "^0.29.0"
   }
 }

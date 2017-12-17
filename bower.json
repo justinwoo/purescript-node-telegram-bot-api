@@ -15,7 +15,7 @@
     "purescript-strings": "^3.0.0",
     "purescript-foreign": "^4.0.0",
     "purescript-aff": "^4.0.0",
-    "purescript-simple-json": "^0.5.0"
+    "purescript-simple-json": "^1.0.0"
   },
   "devDependencies": {
     "purescript-validation": "^3.1.0",
