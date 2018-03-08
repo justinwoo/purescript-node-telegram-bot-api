@@ -13,7 +13,7 @@ import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
 import Data.Monoid (mempty)
 import Data.String.Regex (Regex)
-import Simple.JSON (read)
+import Simple.JSON (read')
 
 type TelegramEffects e = (telegram :: TELEGRAM | e)
 
@@ -109,7 +109,7 @@ onText bot regex handler = do
   onText' bot regex handleMessage
   where
     handleMessage foreignMsg foreignMatches =
-      handler (read foreignMsg) (read foreignMatches)
+      handler (read' foreignMsg) (read' foreignMatches)
 
 --| For getting the Foreign values directly. The callback is Message -> Matches -> Eff _ Unit.
 onText' :: forall e.
@@ -132,7 +132,7 @@ onMessage :: forall e.
   (F Message -> Eff (TelegramEffects e) Unit) ->
   (Eff (TelegramEffects e) Unit)
 onMessage bot handler = do
-  onMessage' bot $ handler <<< read
+  onMessage' bot $ handler <<< read'
 
 --| For getting the Foreign value directly from onMessage
 onMessage' :: forall e.
@@ -159,7 +159,7 @@ getMe :: forall e.
   (Aff (TelegramEffects e) (F User))
 getMe bot = do
   p <- liftEff $ runFn1 _getMe bot
-  read <$> makeAff
+  read' <$> makeAff
     (\cb -> pure mempty <* runPromise
       (mkEffFn1 $ cb <<< Left)
       (mkEffFn1 $ cb <<< Right)
