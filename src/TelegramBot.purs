@@ -9,8 +9,8 @@ import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Eff.Uncurried (EffFn1, mkEffFn1)
 import Data.Either (Either(..))
 import Data.Foreign (Foreign, F)
-import Data.Foreign.NullOrUndefined (NullOrUndefined)
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
+import Data.Maybe (Maybe)
 import Data.Monoid (mempty)
 import Data.String.Regex (Regex)
 import Simple.JSON (read')
@@ -28,28 +28,28 @@ type Options =
 --| The Telegram Message type. See https://core.telegram.org/bots/api#message
 type Message =
   { message_id :: Int
-  , from :: NullOrUndefined User
+  , from :: Maybe User
   , date :: Int
   , chat :: Chat
-  , location :: NullOrUndefined Location
-  , text :: NullOrUndefined String
+  , location :: Maybe Location
+  , text :: Maybe String
   }
 
 --| The Telegram User type. See https://core.telegram.org/bots/api#user
 type User =
   { id :: Int
-  , first_name :: NullOrUndefined String
-  , last_name :: NullOrUndefined String
-  , username :: NullOrUndefined String
+  , first_name :: Maybe String
+  , last_name :: Maybe String
+  , username :: Maybe String
   }
 
 --| The Telegram Chat type. See https://core.telegram.org/bots/api#chat
 type Chat =
   { id :: Int
   , type :: String
-  , first_name :: NullOrUndefined String
-  , last_name :: NullOrUndefined String
-  , username :: NullOrUndefined String
+  , first_name :: Maybe String
+  , last_name :: Maybe String
+  , username :: Maybe String
   }
 
 --| The Telegram Location type. See https://core.telegram.org/bots/api#location
@@ -59,7 +59,7 @@ type Location =
   }
 
 --| The Regex execution matches. See https://github.com/yagop/node-telegram-bot-api#TelegramBot+onText
-type Matches = NullOrUndefined (Array String)
+type Matches = Maybe (Array String)
 
 foreign import data TELEGRAM :: Effect
 foreign import data Bot :: Type

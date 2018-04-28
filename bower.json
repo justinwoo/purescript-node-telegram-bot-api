@@ -14,13 +14,13 @@
   "dependencies": {
     "purescript-strings": "^3.5.0",
     "purescript-foreign": "^4.0.1",
-    "purescript-aff": "^4.0.2",
-    "purescript-simple-json": "^2.0.1"
+    "purescript-aff": "^4.1.1",
+    "purescript-simple-json": "^3.0.0"
   },
   "devDependencies": {
     "purescript-validation": "^3.2.0",
     "purescript-node-process": "^5.0.0",
-    "purescript-test-unit": "git@github.com:natefaubion/purescript-test-unit.git#fe237eb51c7e7a372252861a39f77dc6a4625582"
+    "purescript-test-unit": "13.0.0"
   },
   "version": "0.1.0"
 }
