@@ -2,20 +2,17 @@ module TelegramBot where
 
 import Prelude
 
-import Control.Monad.Aff (Aff, makeAff)
-import Control.Monad.Eff (Eff, kind Effect)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Exception (Error)
-import Control.Monad.Eff.Uncurried (EffFn1, mkEffFn1)
 import Data.Either (Either(..))
-import Data.Foreign (Foreign, F)
 import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
 import Data.Maybe (Maybe)
-import Data.Monoid (mempty)
 import Data.String.Regex (Regex)
+import Effect (Effect)
+import Effect.Aff (Aff, makeAff)
+import Effect.Class (liftEffect)
+import Effect.Exception (Error)
+import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Foreign (F, Foreign)
 import Simple.JSON (read')
-
-type TelegramEffects e = (telegram :: TELEGRAM | e)
 
 --| The Telegram Bot API Token.
 type Token = String
@@ -61,7 +58,6 @@ type Location =
 --| The Regex execution matches. See https://github.com/yagop/node-telegram-bot-api#TelegramBot+onText
 type Matches = Maybe (Array String)
 
-foreign import data TELEGRAM :: Effect
 foreign import data Bot :: Type
 
 defaultOptions :: Options
@@ -69,99 +65,99 @@ defaultOptions =
   { polling: true
   }
 
-foreign import _connect :: forall e.
+foreign import _connect ::
   Fn2
     Options
     Token
-    (Eff (TelegramEffects e) Bot)
-connect :: forall e.
+    (Effect Bot)
+connect ::
   Token ->
-  Eff (TelegramEffects e) Bot
+  Effect Bot
 connect = runFn2 _connect defaultOptions
 
-foreign import _sendMessage :: forall e.
+foreign import _sendMessage ::
   Fn3
     Bot
     Int
     String
-    (Eff (TelegramEffects e) Unit)
-sendMessage :: forall e.
+    (Effect Unit)
+sendMessage ::
   Bot ->
   Int ->
   String ->
-  Eff (TelegramEffects e) Unit
+  Effect Unit
 sendMessage bot id message = do
   runFn3 _sendMessage bot id message
 
-foreign import _onText :: forall e.
+foreign import _onText ::
   Fn3
     Bot
     Regex
-    (Foreign -> Foreign -> Eff (TelegramEffects e) Unit)
-    (Eff (TelegramEffects e) Unit)
+    (Foreign -> Foreign -> Effect Unit)
+    (Effect Unit)
 --| For adding a callback for on text matching a regex pattern.
-onText :: forall e.
+onText ::
   Bot ->
   Regex ->
-  (F Message -> F Matches -> Eff (TelegramEffects e) Unit) ->
-  (Eff (TelegramEffects e) Unit)
+  (F Message -> F Matches -> Effect Unit) ->
+  (Effect Unit)
 onText bot regex handler = do
   onText' bot regex handleMessage
   where
     handleMessage foreignMsg foreignMatches =
       handler (read' foreignMsg) (read' foreignMatches)
 
---| For getting the Foreign values directly. The callback is Message -> Matches -> Eff _ Unit.
-onText' :: forall e.
+--| For getting the Foreign values directly. The callback is Message -> Matches -> Effect _ Unit.
+onText' ::
   Bot ->
   Regex ->
-  (Foreign -> Foreign -> Eff (TelegramEffects e) Unit) ->
-  (Eff (TelegramEffects e) Unit)
+  (Foreign -> Foreign -> Effect Unit) ->
+  (Effect Unit)
 onText' bot regex handler = do
   runFn3 _onText bot regex handler
 
-foreign import _onMessage :: forall e.
+foreign import _onMessage ::
   Fn2
     Bot
-    (Foreign -> Eff (TelegramEffects e) Unit)
-    (Eff (TelegramEffects e) Unit)
+    (Foreign -> Effect Unit)
+    (Effect Unit)
 
 --| For adding a callback for all messages.
-onMessage :: forall e.
+onMessage ::
   Bot ->
-  (F Message -> Eff (TelegramEffects e) Unit) ->
-  (Eff (TelegramEffects e) Unit)
+  (F Message -> Effect Unit) ->
+  (Effect Unit)
 onMessage bot handler = do
   onMessage' bot $ handler <<< read'
 
 --| For getting the Foreign value directly from onMessage
-onMessage' :: forall e.
+onMessage' ::
   Bot ->
-  (Foreign -> Eff (TelegramEffects e) Unit) ->
-  (Eff (TelegramEffects e) Unit)
+  (Foreign -> Effect Unit) ->
+  (Effect Unit)
 onMessage' bot handler = do
   runFn2 _onMessage bot handler
 
 foreign import data Promise :: Type -> Type
-foreign import runPromise :: forall e a
-   . (EffFn1 e Error Unit)
-  -> (EffFn1 e a Unit)
+foreign import runPromise :: forall a
+   . (EffectFn1 Error Unit)
+  -> (EffectFn1 a Unit)
   -> Promise a
-  -> Eff e Unit
+  -> Effect Unit
 
-foreign import _getMe :: forall e.
+foreign import _getMe ::
   Fn1
     Bot
-    (Eff (TelegramEffects e) (Promise Foreign))
+    (Effect (Promise Foreign))
 --| For adding a callback for all messages.
-getMe :: forall e.
+getMe ::
   Bot ->
-  (Aff (TelegramEffects e) (F User))
+  (Aff (F User))
 getMe bot = do
-  p <- liftEff $ runFn1 _getMe bot
+  p <- liftEffect $ runFn1 _getMe bot
   read' <$> makeAff
     (\cb -> pure mempty <* runPromise
-      (mkEffFn1 $ cb <<< Left)
-      (mkEffFn1 $ cb <<< Right)
+      (mkEffectFn1 $ cb <<< Left)
+      (mkEffectFn1 $ cb <<< Right)
       p
     )
