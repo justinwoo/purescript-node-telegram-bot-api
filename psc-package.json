@@ -1,12 +1,13 @@
 {
-    "name": "purescript-node-telegram-bot-api",
-    "set": "psc-0.10.2",
-    "source": "https://github.com/purescript/package-sets.git",
-    "depends": [
-        "node-fs-aff",
-        "strings",
-        "console",
-        "functions",
-        "prelude"
-    ]
+  "name": "purescript-node-telegram-bot-api",
+  "set": "180718",
+  "source": "https://github.com/justinwoo/spacchetti.git",
+  "depends": [
+    "node-fs-aff",
+    "strings",
+    "console",
+    "functions",
+    "simple-json",
+    "prelude"
+  ]
 }
