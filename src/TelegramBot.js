@@ -6,9 +6,9 @@ exports._connect = function (options, token) {
   };
 };
 
-exports._sendMessage = function(bot, id, message) {
+exports._sendMessage = function(bot, id, message, options) {
   return function () {
-    bot.sendMessage(id, message);
+    bot.sendMessage(id, message, options);
   };
 };
 
