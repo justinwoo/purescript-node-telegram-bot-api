@@ -3,7 +3,7 @@ module TelegramBot where
 import Prelude
 
 import Data.Either (Either(..))
-import Data.Function.Uncurried (Fn1, Fn2, Fn3, runFn1, runFn2, runFn3)
+import Data.Function.Uncurried (Fn1, Fn2, Fn3, Fn4, runFn1, runFn2, runFn3, runFn4)
 import Data.Maybe (Maybe)
 import Data.String.Regex (Regex)
 import Effect (Effect)
@@ -75,19 +75,29 @@ connect ::
   Effect Bot
 connect = runFn2 _connect defaultOptions
 
-foreign import _sendMessage ::
-  Fn3
+foreign import _sendMessage :: forall r.
+  Fn4
     Bot
     Int
     String
+    (Record r)
     (Effect Unit)
+sendMessageWithOptions :: forall r.
+  Bot ->
+  Int ->
+  String ->
+  Record r ->
+  Effect Unit
+sendMessageWithOptions bot id message options = do
+  runFn4 _sendMessage bot id message options
+
 sendMessage ::
   Bot ->
   Int ->
   String ->
   Effect Unit
 sendMessage bot id message = do
-  runFn3 _sendMessage bot id message
+  sendMessageWithOptions bot id message {}
 
 foreign import _onText ::
   Fn3
